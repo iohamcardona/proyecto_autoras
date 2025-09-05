@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Periódico de Retazos — Autoras</title>
+<style>
+  :root{
+    --ink:#1b140e; --kraft:#d7c3a6;
+    --openDur:2.4s; --openEase:cubic-bezier(.2,.85,.1,1);
+    --purple:#7c3aed; --green:#16a34a; --fucsia:#e11d48; --orange:#f97316; --sky:#0ea5e9;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #fff3, #0000 60%),
+      repeating-linear-gradient(0deg, #0001 0 2px, #0000 2px 8px),
+      linear-gradient(180deg,#e6d7bf,var(--kraft));
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background:
+      radial-gradient(1px 1px at 20% 30%, #0002 98%, #0000) 0 0/6px 6px,
+      radial-gradient(1px 1px at 70% 80%, #0002 98%, #0000) 0 0/8px 8px,
+      radial-gradient(1px 1px at 40% 60%, #0003 98%, #0000) 0 0/11px 11px;
+    mix-blend-mode:multiply; opacity:.45;
+  }
+
+  /* ===== Portada (periódico que se abre) ===== */
+  .cover{position:fixed; inset:0; display:grid; place-items:center; z-index:30;}
+  .sheet{position:absolute; inset:0; display:flex; filter:drop-shadow(0 30px 30px #0006);}
+  .sheet > div{ background:linear-gradient(#efe3cf,#e1cfb1); border:1px solid #00000025; overflow:hidden; }
+  .sheet-left{ width:51%; transform-origin:left center; transition:transform var(--openDur) var(--openEase); }
+  .sheet-right{ width:51%; margin-left:-2%; transform-origin:right center; transition:transform var(--openDur) var(--openEase); }
+  .fiber{ position:absolute; inset:0; opacity:.25; background:
+      repeating-linear-gradient(90deg,#0001 0 1px,#0000 1px 5px),
+      repeating-linear-gradient(0deg,#0001 0 1px,#0000 1px 6px);}
+  .spine{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:6px; height:100%;
+          background: linear-gradient(#0002, #0000 20%, #0000 80%, #0002); opacity:.35; mix-blend-mode:multiply; }
+  .cover-controls{ position:relative; z-index:3; display:grid; place-items:center; }
+  .btn{
+    appearance:none; border:0; cursor:pointer; background:#fff; color:#111;
+    padding:1rem 1.25rem; border-radius:.8rem; font-weight:800; letter-spacing:.3px;
+    box-shadow:0 10px 20px #00000020, inset 0 1px 0 #fff8;
+  }
+  .cover.open .sheet-left{ transform:translateX(-104%); }
+  .cover.open .sheet-right{ transform:translateX(104%); }
+
+  /* ===== Escena ===== */
+  .stage{ position:fixed; inset:0; padding:2.2rem; display:grid; place-items:center;
+          opacity:0; transform:scale(.98); transition:opacity .6s ease, transform .6s ease; }
+  .stage.visible{ opacity:1; transform:none; }
+  .board{
+    position:relative; width:min(1200px,92vw); height:min(760px,78vh);
+    background:linear-gradient(#eadcc6,#e5d1b4);
+    border:1px dashed #00000035; border-radius:22px;
+    box-shadow:0 20px 50px #00000035; overflow:hidden;
+  }
+
+  /* ===== Tarjeta recorte ===== */
+  .author{
+    position:absolute; width:285px; background:#fff; z-index:2;
+    border:1px dashed #00000050; border-radius:18px;
+    box-shadow:0 16px 34px #0000002c; cursor:pointer;
+    transform:rotate(var(--rot,0deg)); transition:transform .2s ease, box-shadow .2s ease;
+    clip-path:polygon(4% 2%,96% 0,98% 18%,100% 50%,97% 84%,92% 98%,7% 100%,0 78%,2% 46%,0 20%);
+    background-image: radial-gradient(#00000012 1px, transparent 1.5px);
+    background-size:6px 6px;
+  }
+  .author:hover{ transform:translateY(-3px) rotate(var(--rot,0deg)); box-shadow:0 24px 44px #00000035; }
+  .author header{ padding:.7rem .9rem; font-weight:900; letter-spacing:.2px; border-bottom:1px dashed #0003; }
+  .author .body{ padding:.85rem .95rem; display:grid; gap:.45rem; }
+  .author .tags{ display:flex; flex-wrap:wrap; gap:.35rem; }
+  .author .tag{ font-size:.72rem; padding:.2rem .5rem; border:1px dashed currentColor; border-radius:.6rem; background:#0000000e; }
+  .author::after{
+    content:""; position:absolute; width:64px; height:18px; left:14px; top:-12px;
+    background:linear-gradient(#fefefe,#e7e7e7);
+    border:2px solid var(--tape,#444); border-radius:4px; transform:rotate(-6deg);
+    box-shadow:0 6px 12px #0000002a;
+  }
+  /* Temas por autora */
+  .author[data-theme="salazar"]{ --tape:var(--sky); color:var(--sky); }
+  .author[data-theme="curiel"] { --tape:var(--fucsia); color:var(--fucsia); }
+  .author[data-theme="federici"]{ --tape:var(--green); color:var(--green); }
+  .author[data-theme="cusicanqui"]{ --tape:var(--orange); color:var(--orange); }
+
+  /* Posiciones cardinales */
+  .north{ top:24px; left:50%; transform:translateX(-50%) rotate(-2deg); --rot:-2deg; }
+  .south{ bottom:24px; left:50%; transform:translateX(-50%) rotate(2deg); --rot:2deg; }
+  .west{ left:24px; top:50%; transform:translateY(-50%) rotate(-1.5deg); --rot:-1.5deg; }
+  .east{ right:24px; top:50%; transform:translateY(-50%) rotate(1.5deg); --rot:1.5deg; }
+
+  @media (max-width:900px){ .author{ width:245px } }
+  @media (max-width:730px){
+    .board{ height:82vh; display:flex; flex-wrap:wrap; align-content:flex-start; justify-content:center; gap:12px; padding:16px; overflow:auto; }
+    .north,.south,.west,.east{ position:static; transform:none; margin:12px auto; }
+  }
+
+  /* ===== Stickers (debajo de las tarjetas) ===== */
+  .sticker{ position:absolute; width:92px; height:92px; filter: drop-shadow(0 6px 10px #00000035);
+            z-index:1; pointer-events:none; } /* no bloquea ni tapa */
+  .sticker svg{ width:100%; height:100%; }
+  .wiggle{ transition: transform .25s ease; }
+
+  .img-slot{
+    position:absolute; width:120px; height:120px; background:#fff; z-index:1; pointer-events:none;
+    border:1px dashed #00000055; border-radius:12px;
+    background-size:cover; background-position:center;
+    box-shadow:0 10px 20px #00000030; transform:rotate(var(--rot,-6deg));
+  }
+
+  /* ===== Panel detalle ===== */
+  .detail{ position:fixed; inset:0; background:#ffffffee; backdrop-filter:blur(4px);
+           display:grid; grid-template-rows:auto 1fr; opacity:0; pointer-events:none; transform:translateY(10px);
+           transition:opacity .25s ease, transform .25s ease; z-index:40; }
+  .detail.open{ opacity:1; pointer-events:auto; transform:none; }
+  .appbar{ display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px dashed #0003; }
+  .ghost{ border:1px dashed #0006; background:transparent; padding:.55rem .8rem; border-radius:.6rem; cursor:pointer; }
+  .primary{ border:0; background:var(--purple); color:#fff; padding:.6rem .9rem; border-radius:.6rem; cursor:pointer; font-weight:800; }
+  .detail-main{ display:grid; grid-template-columns:320px 1fr; gap:1rem; padding:1rem; }
+  @media (max-width:900px){ .detail-main{ grid-template-columns:1fr; } }
+  .portrait{ aspect-ratio:3/4; border-radius:16px; background:linear-gradient(#ddd,#bbb); overflow:hidden; border:1px solid #00000015; box-shadow:0 10px 22px #00000022; }
+  .portrait img{ width:100%; height:100%; object-fit:cover; }
+  .bio{ display:grid; gap:.6rem; }
+  .chips{ display:flex; flex-wrap:wrap; gap:.4rem; }
+  .chip{ font-size:.75rem; padding:.25rem .55rem; border:1px dashed #00000025; border-radius:999px; background:#fff; }
+
+  /* Grid de previas PDF */
+  .docgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:.8rem; }
+  .doccard{ background:#fff; border:1px dashed #0003; border-radius:.6rem; box-shadow:0 8px 16px #0002; overflow:hidden; }
+  .doccard a{ text-decoration:none; color:inherit; display:block; }
+  .doccard .thumb{ width:100%; height:220px; border:0; display:block; background:#f4f4f4; }
+  .doccard .caption{ padding:.5rem .6rem; font-size:.85rem; font-weight:700; line-height:1.2; }
+  .fallback{ display:grid; place-items:center; width:100%; height:220px; background:#f1f5f9; color:#334155; }
+  .fallback svg{ width:44px; height:44px; opacity:.7; }
+
+  /* ===== Reproductor de audio ===== */
+  .player{
+    position:fixed; left:20px; bottom:20px; z-index:50;
+    background:#fff; border:1px dashed #0003; border-radius:14px;
+    box-shadow:0 12px 24px #0003; padding:.6rem .8rem; width:min(480px,92vw);
+    display:grid; grid-template-columns:auto auto 1fr auto; gap:.6rem; align-items:center;
+  }
+  .pbtn,.sbtn{ appearance:none; border:0; background:#111; color:#fff; width:42px; height:42px;
+         border-radius:999px; cursor:pointer; font-weight:900; }
+  .sbtn{ width:36px; height:36px; background:#333; }
+  .meta{ font-size:.86rem; line-height:1.1 }
+  .bar{ appearance:none; width:100%; height:6px; background:#eee; border-radius:999px; outline:none; }
+  .bar::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; background:#111; border-radius:999px; cursor:pointer; }
+  .time{ font-variant-numeric:tabular-nums; font-size:.78rem; opacity:.75; }
+  .chip{ border:1px dashed #0005; background:transparent; border-radius:.5rem; padding:.2rem .45rem; cursor:pointer; }
+  .vol{ display:flex; gap:.4rem; align-items:center; }
+  .vol input{ width:90px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Portada ===== -->
+<section class="cover" id="cover">
+  <div class="sheet">
+    <div class="sheet-left"><div class="fiber"></div></div>
+    <div class="sheet-right"><div class="fiber"></div></div>
+    <div class="spine" aria-hidden="true"></div>
+  </div>
+  <div class="cover-controls">
+    <button class="btn" id="openBtn">Empezar</button>
+  </div>
+</section>
+
+<!-- ===== Escena ===== -->
+<section class="stage" id="stage" aria-live="polite">
+  <div class="board" id="board">
+
+    <!-- Recortes globales opcionales -->
+    <div class="img-slot" style="--rot:-8deg; top:18px; left:18px; background-image:url('assets/stickers/letras-collage.png');"></div>
+    <div class="img-slot" style="--rot:7deg; right:22px; bottom:20px; background-image:url('assets/stickers/tipo-collage.png');"></div>
+
+    <!-- ===== Autoras (N,S,O,E) ===== -->
+    <article class="author north" data-id="salazar" data-theme="salazar" role="button" tabindex="0">
+      <header>María Cristina Salazar</header>
+      <div class="body">
+        <div class="tags"><span class="tag">Sociología</span><span class="tag">IAP</span><span class="tag">Infancia trabajadora</span></div>
+        <small style="opacity:.75">Pionera PhD en Sociología en Colombia; referente en investigación-acción y crítica del trabajo infantil.</small>
+      </div>
+    </article>
+
+    <article class="author west" data-id="curiel" data-theme="curiel" role="button" tabindex="0">
+      <header>Ochy Curiel</header>
+      <div class="body">
+        <div class="tags"><span class="tag">Autonomía</span><span class="tag">Lesbofem</span><span class="tag">Antirracista</span></div>
+        <small style="opacity:.75">Antropóloga, activista y cantautora. GLEFAS; intersección raza/sexo/sexualidad/clase.</small>
+      </div>
+    </article>
+
+    <article class="author south" data-id="federici" data-theme="federici" role="button" tabindex="0">
+      <header>Silvia Federici</header>
+      <div class="body">
+        <div class="tags"><span class="tag">Trabajo reproductivo</span><span class="tag">Comunes</span></div>
+        <small style="opacity:.75">Feminismo autónomo. “Wages for Housework”. Crítica a capitalismo/patriarcado/colonialismo.</small>
+      </div>
+    </article>
+
+    <article class="author east" data-id="cusicanqui" data-theme="cusicanqui" role="button" tabindex="0">
+      <header>Silvia Rivera Cusicanqui</header>
+      <div class="body">
+        <div class="tags"><span class="tag">Ch’ixi</span><span class="tag">THOA</span><span class="tag">Aymara</span></div>
+        <small style="opacity:.75">Memoria, cuerpo, territorio; crítica al uso acrítico del “decolonial”.</small>
+      </div>
+    </article>
+
+    <!-- ===== Stickers por autora (debajo) ===== -->
+    <!-- Salazar: carpeta/notas -->
+    <div class="sticker wiggle" style="left:30%; top:16%; rotate:-6deg;">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M10 20 h18 l4 6 h22 v26 H10z" fill="#fde68a" stroke="#0006"/>
+        <rect x="14" y="28" width="36" height="18" rx="2" fill="#fff" stroke="#0004"/>
+        <line x1="18" y1="34" x2="46" y2="34" stroke="#0005"/>
+        <line x1="18" y1="39" x2="42" y2="39" stroke="#0005"/>
+      </svg>
+    </div>
+    <!-- Curiel: batucada / nota musical -->
+    <div class="sticker wiggle" style="left:12%; top:62%; rotate:-10deg;">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M38 10 v28 a10 10 0 1 1 -6 -9 v-19 z" fill="#a21caf" stroke="#0006"/>
+        <circle cx="22" cy="48" r="8" fill="#f59e0b" stroke="#0006"/>
+      </svg>
+    </div>
+    <!-- Federici: pañuelo verde -->
+    <div class="sticker wiggle" style="left:48%; bottom:12%; transform:translateX(-50%) rotate(-6deg)">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M8 16 Q32 8 56 16 L32 50 Z" fill="#16a34a" stroke="#0006"/>
+        <circle cx="32" cy="36" r="4" fill="#0c7a2a" stroke="#0004"/>
+      </svg>
+    </div>
+    <!-- Cusicanqui: Wiphala -->
+    <div class="sticker wiggle" style="right:14%; top:44%; rotate:6deg;">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="8" y="12" width="44" height="32" fill="#fff" stroke="#0006"/>
+        <g>
+          <rect x="8" y="12" width="8" height="8" fill="#ef4444"/>
+          <rect x="16" y="12" width="8" height="8" fill="#f59e0b"/>
+          <rect x="24" y="12" width="8" height="8" fill="#fbbf24"/>
+          <rect x="32" y="12" width="8" height="8" fill="#22c55e"/>
+          <rect x="40" y="12" width="8" height="8" fill="#0ea5e9"/>
+
+          <rect x="8" y="20" width="8" height="8" fill="#f59e0b"/>
+          <rect x="16" y="20" width="8" height="8" fill="#fbbf24"/>
+          <rect x="24" y="20" width="8" height="8" fill="#22c55e"/>
+          <rect x="32" y="20" width="8" height="8" fill="#0ea5e9"/>
+          <rect x="40" y="20" width="8" height="8" fill="#a855f7"/>
+
+          <rect x="8" y="28" width="8" height="8" fill="#fbbf24"/>
+          <rect x="16" y="28" width="8" height="8" fill="#22c55e"/>
+          <rect x="24" y="28" width="8" height="8" fill="#0ea5e9"/>
+          <rect x="32" y="28" width="8" height="8" fill="#a855f7"/>
+          <rect x="40" y="28" width="8" height="8" fill="#ef4444"/>
+        </g>
+        <rect x="52" y="12" width="4" height="36" fill="#6b7280"/>
+      </svg>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Panel detalle ===== -->
+<aside class="detail" id="detail" aria-modal="true" role="dialog" aria-labelledby="detailName">
+  <div class="appbar">
+    <div style="font-weight:900; letter-spacing:.3px">Perfil de autora</div>
+    <div><button class="ghost" id="closeDetail">Cerrar</button></div>
+  </div>
+  <div class="detail-main">
+    <div class="portrait" id="detailPortrait" aria-hidden="true"></div>
+    <div class="bio">
+      <h2 id="detailName" style="margin:.2rem 0 0">Nombre Apellido</h2>
+      <div id="detailShort" style="opacity:.85">Resumen breve…</div>
+      <div class="chips" id="detailChips"></div>
+      <div style="margin-top:.6rem; border-top:1px dashed #0003; padding-top:.6rem">
+        <h3 style="margin:.2rem 0 .4rem">Bibliografía / PDFs</h3>
+        <div class="docgrid" id="detailDocs"></div>
+      </div>
+      <div style="display:flex; gap:.6rem; margin-top:.6rem; flex-wrap:wrap">
+        <button class="primary" id="backToBoard">Volver a las autoras</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== Reproductor de audio (2 pistas, autoplay, repeat-all) ===== -->
+<div class="player" aria-label="Reproductor">
+  <button class="sbtn" id="prev" title="Anterior">⏮</button>
+  <button class="pbtn" id="pp" title="Play/Pausa">⏸</button>
+  <div class="meta">
+    <div id="songTitle" style="font-weight:800">—</div>
+    <input id="seek" class="bar" type="range" min="0" max="100" value="0" />
+    <div class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></div>
+  </div>
+  <div style="display:grid; gap:.4rem; justify-items:end">
+    <div class="vol">
+      <button class="sbtn" id="mute" title="Silencio">🔊</button>
+      <input id="vol" type="range" min="0" max="1" step="0.01" value="1" />
+    </div>
+    <div style="display:flex; gap:.4rem">
+      <button class="chip" id="loopBtn" aria-pressed="true" title="Repetir toda la lista">Repeat All</button>
+      <button class="sbtn" id="next" title="Siguiente">⏭</button>
+    </div>
+  </div>
+</div>
+<audio id="track" preload="metadata"></audio>
+
+<script>
+/* ===== Datos de autoras (fotos, bios, PDFs) ===== */
+const AUTORAS = [
+  {
+    id:'cusicanqui',
+    nombre:'Silvia Rivera Cusicanqui',
+    foto:'assets/autoras/cusicanqui.jpg',
+    tags:['Ch’ixi','THOA','Aymara'],
+    resumen:'(La Paz, 1949) Socióloga e historiadora aymara; referente crítico decolonial. Fundadora del THOA; pensamiento ch’ixi.',
+    docs:[
+      {titulo:'Sociología de la imagen', url:'assets/pdfs/cusicanqui/sociologia-de-la-imagen.pdf'},
+      {titulo:'Un mundo ch’ixi es posible', url:'assets/pdfs/cusicanqui/un-mundo-chixi-es-posible.pdf'},
+      {titulo:'Oprimidos pero no vencidos', url:'assets/pdfs/cusicanqui/oprimidos-pero-no-vencidos.pdf'},
+      {titulo:'Potencial epistemológico de la historia oral', url:'assets/pdfs/cusicanqui/potencial-epistemologico-historia-oral.pdf'}
+    ]
+  },
+  {
+    id:'salazar',
+    nombre:'María Cristina Salazar',
+    foto:'assets/autoras/salazar.png',
+    tags:['Sociología','IAP','Infancia trabajadora'],
+    resumen:'(Bogotá, 1931–2006) Socióloga; primera mujer PhD en Sociología en Colombia. Pionera de la investigación-acción; crítica del trabajo infantil.',
+    docs:[
+      {titulo:'El trabajo infantil en Colombia', url:'assets/pdfs/salazar/trabajo-infantil-colombia.pdf'},
+      {titulo:'Los esclavos invisibles', url:'assets/pdfs/salazar/los-esclavos-invisibles.pdf'},
+      {titulo:'Rompiendo el muro del autoritarismo', url:'assets/pdfs/salazar/rompiendo-el-muro-del-autoritarismo.pdf'}
+    ]
+  },
+  {
+    id:'curiel',
+    nombre:'Ochy Curiel',
+    foto:'assets/autoras/ochy-curiel.jpg',
+    tags:['Autonomía','Lesbofeminismo','Antirracismo','Decolonial'],
+    resumen:'(Rep. Dominicana, 1963) Antropóloga social, activista y cantautora. Co-fundadora de GLEFAS; obra sobre imbricación de raza/sexo/sexualidad/clase.',
+    docs:[
+      {titulo:'Género, raza, sexualidad', url:'assets/pdfs/curiel/genero-raza-sexualidad.pdf'},
+      {titulo:'La nación heterosexual', url:'assets/pdfs/curiel/la-nacion-heterosexual.pdf'},
+      {titulo:'Crítica poscolonial…', url:'assets/pdfs/curiel/critica-poscolonial-feminismo-antirracista.pdf'},
+      {titulo:'Descolonizando el feminismo', url:'assets/pdfs/curiel/descolonizando-el-feminismo.pdf'}
+    ]
+  },
+  {
+    id:'federici',
+    nombre:'Silvia Federici',
+    foto:'assets/autoras/federici.jpg',
+    tags:['Trabajo reproductivo','Comunes','Feminismo popular'],
+    resumen:'(Parma, 1942) Filósofa e historiadora. “Wages for Housework”; crítica a capitalismo/patriarcado/colonialismo. Autora de Calibán y la bruja, entre otros.',
+    docs:[
+      {titulo:'Ir más allá de la piel', url:'assets/pdfs/federici/ir-mas-alla-de-la-piel.pdf'},
+      {titulo:'Calibán y la bruja', url:'assets/pdfs/federici/caliban-y-la-bruja.pdf'},
+      {titulo:'El patriarcado del salario', url:'assets/pdfs/federici/el-patriarcado-del-salario.pdf'}
+    ]
+  }
+];
+
+/* ===== Portada ===== */
+const cover=document.getElementById('cover'), stage=document.getElementById('stage');
+document.getElementById('openBtn').addEventListener('click', ()=>{
+  cover.classList.add('open');
+  setTimeout(()=> stage.classList.add('visible'), 700);
+  setTimeout(()=> cover.style.display='none', 2500);
+  try{ audio.play(); }catch{}
+});
+
+/* ===== Interacciones tarjetas -> panel detalle ===== */
+const board=document.getElementById('board'), detail=document.getElementById('detail');
+const dPortrait=document.getElementById('detailPortrait'), dName=document.getElementById('detailName');
+const dShort=document.getElementById('detailShort'), dChips=document.getElementById('detailChips'), dDocs=document.getElementById('detailDocs');
+
+board.addEventListener('click', ev=>{
+  const card=ev.target.closest('.author'); if(!card) return;
+  openDetail(card.dataset.id);
+});
+board.addEventListener('keydown', ev=>{
+  const card=ev.target.closest('.author');
+  if(card && (ev.key==='Enter' || ev.key===' ')) openDetail(card.dataset.id);
+});
+
+function openDetail(id){
+  const a=AUTORAS.find(x=>x.id===id); if(!a) return;
+  dPortrait.innerHTML = a.foto ? `<img src="${a.foto}" alt="Retrato de ${a.nombre}">` : '';
+  dName.textContent = a.nombre;
+  dShort.textContent = a.resumen || '';
+  dChips.innerHTML=''; (a.tags||[]).forEach(t=> dChips.insertAdjacentHTML('beforeend', `<span class="chip">${t}</span>`));
+
+  // Grid con vistas previas PDF (embed) y fallback
+  dDocs.innerHTML='';
+  (a.docs||[]).forEach(d=>{
+    const safeURL = d.url + (d.url.includes('#') ? '' : '#page=1&zoom=120');
+    const fallback = `
+      <div class='fallback'>
+        <svg viewBox='0 0 24 24'><path d='M6 2h7l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='#e11d48'/><path d='M13 2v5h5' fill='#fff' opacity='.35'/><text x='7' y='20' font-size='7' font-family='monospace' fill='#fff' font-weight='700'>PDF</text></svg>
+        <div style='font-size:.8rem;margin-top:.4rem'>Vista previa no disponible</div>
+      </div>`;
+    dDocs.insertAdjacentHTML('beforeend', `
+      <div class="doccard">
+        <a href="${d.url}" target="_blank" rel="noopener">
+          <embed class="thumb" src="${safeURL}" type="application/pdf"
+            onerror="this.outerHTML=\`${fallback}\`">
+          <div class="caption">${escapeHTML(d.titulo)}</div>
+        </a>
+      </div>
+    `);
+  });
+
+  detail.classList.add('open');
+}
+document.getElementById('closeDetail').addEventListener('click', ()=> detail.classList.remove('open'));
+document.getElementById('backToBoard').addEventListener('click', ()=> detail.classList.remove('open'));
+document.addEventListener('keydown', ev=>{ if(ev.key==='Escape') detail.classList.remove('open'); });
+
+function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+/* ===== Reproductor: 2 pistas, autoplay, repeat-all por defecto ===== */
+const playlist = [
+  { title: 'Canción 1', file: 'assets/audio/cancion1.mp3' },
+  { title: 'Canción 2', file: 'assets/audio/cancion2.mp3' },
+];
+const audio   = document.getElementById('track');
+const pp      = document.getElementById('pp');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const loopBtn = document.getElementById('loopBtn');
+const seek    = document.getElementById('seek');
+const curT    = document.getElementById('cur');
+const durT    = document.getElementById('dur');
+const titleEl = document.getElementById('songTitle');
+const volBtn  = document.getElementById('mute');
+const volSl   = document.getElementById('vol');
+
+let index = 0, userSeeking = false;
+let repeatAll = true, repeatOne = false;
+
+function fmt(t){ if(isNaN(t)) return '0:00'; const m=Math.floor(t/60), s=Math.floor(t%60); return `${m}:${s.toString().padStart(2,'0')}`; }
+function load(i, autoplay=false){
+  index = (i + playlist.length) % playlist.length;
+  const tr = playlist[index];
+  audio.src = tr.file; titleEl.textContent = tr.title; audio.load();
+  if (autoplay) audio.play().catch(()=>{});
+}
+
+pp.addEventListener('click', async ()=>{
+  if (audio.paused){ await audio.play(); pp.textContent='⏸'; }
+  else { audio.pause(); pp.textContent='▶'; }
+});
+prevBtn.addEventListener('click', ()=> load(index-1, true));
+nextBtn.addEventListener('click', ()=> load(index+1, true));
+
+loopBtn.addEventListener('click', ()=>{
+  if (repeatAll && !repeatOne){ repeatAll=false; repeatOne=true; loopBtn.textContent='Repeat One'; loopBtn.setAttribute('aria-pressed','mixed'); }
+  else if (repeatOne){ repeatAll=false; repeatOne=false; loopBtn.textContent='No Repeat'; loopBtn.setAttribute('aria-pressed','false'); }
+  else { repeatAll=true; repeatOne=false; loopBtn.textContent='Repeat All'; loopBtn.setAttribute('aria-pressed','true'); }
+});
+
+audio.addEventListener('loadedmetadata', ()=>{
+  seek.value = 0; durT.textContent = fmt(audio.duration); curT.textContent = '0:00';
+});
+audio.addEventListener('timeupdate', ()=>{
+  if (!userSeeking && audio.duration){ seek.value = Math.round((audio.currentTime / audio.duration) * 100); }
+  curT.textContent = fmt(audio.currentTime); durT.textContent = fmt(audio.duration);
+});
+seek.addEventListener('input', ()=> userSeeking = true);
+seek.addEventListener('change', ()=>{
+  if (audio.duration){ audio.currentTime = (seek.value/100) * audio.duration; }
+  userSeeking = false;
+});
+
+// Volumen + mute
+volSl.addEventListener('input', ()=> { audio.volume = volSl.value; if (audio.muted && audio.volume>0) audio.muted=false; updateVolIcon(); });
+volBtn.addEventListener('click', ()=>{
+  audio.muted = !audio.muted;
+  if (!audio.muted && audio.volume === 0){ audio.volume = 0.5; volSl.value = 0.5; }
+  updateVolIcon();
+});
+function updateVolIcon(){
+  const v = audio.muted ? 0 : audio.volume;
+  volBtn.textContent = v===0 ? '🔇' : (v<0.5 ? '🔈' : '🔊');
+}
+
+// Al terminar: repeat-one > repeat-all > pausa
+audio.addEventListener('ended', ()=>{
+  if (repeatOne){ audio.currentTime=0; audio.play(); return; }
+  if (repeatAll){ load(index+1, true); return; }
+  pp.textContent='▶';
+});
+
+// Autoplay: intenta al cargar y también al pulsar “Empezar”
+window.addEventListener('DOMContentLoaded', ()=>{
+  load(0, true);               // intenta reproducir de una (algunos navegadores lo bloquearán)
+  updateVolIcon();
+});
+</script>
+</body>
+</html>
